@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Grade Card - Aman Kumar</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap');
+        
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: rgba(17, 24, 39, 0.9);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --primary: #6366f1; /* Indigo */
+            --primary-glow: rgba(99, 102, 241, 0.15);
+            --accent: #f59e0b; /* Amber */
+            --success: #10b981; /* Emerald */
+            --danger: #ef4444;
+            --font-family: 'Outfit', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: var(--font-family);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .grade-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            width: 750px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 80px rgba(99, 102, 241, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Decorative Background Glows */
+        .grade-card::before {
+            content: '';
+            position: absolute;
+            top: -150px;
+            right: -150px;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.2) 0%, rgba(0,0,0,0) 70%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .grade-card::after {
+            content: '';
+            position: absolute;
+            bottom: -150px;
+            left: -150px;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(245, 158, 11, 0.1) 0%, rgba(0,0,0,0) 70%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .header {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 25px;
+            margin-bottom: 30px;
+        }
+
+        .header-logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-placeholder {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--primary) 0%, #4338ca 100%);
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 800;
+            font-size: 20px;
+            color: #fff;
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+        }
+
+        .institute-details h1 {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: #fff;
+        }
+
+        .institute-details p {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .badge-training {
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            color: #818cf8;
+            padding: 6px 14px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        /* Student Metadata info */
+        .student-info {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            margin-bottom: 35px;
+        }
+
+        .student-details h2 {
+            font-size: 26px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .student-details p {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .program-tag {
+            display: inline-block;
+            margin-top: 10px;
+            font-size: 12px;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 4px 10px;
+            border-radius: 6px;
+            color: var(--text-primary);
+        }
+
+        .student-meta-right {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-end;
+            text-align: right;
+        }
+
+        .meta-item {
+            margin-bottom: 5px;
+        }
+
+        .meta-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .meta-val {
+            font-size: 15px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        /* Overview grid (Score, Percentile, Rank, Grade) */
+        .overview-grid {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 35px;
+        }
+
+        .overview-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .overview-card:hover {
+            border-color: rgba(99, 102, 241, 0.3);
+            background: rgba(99, 102, 241, 0.02);
+            transform: translateY(-2px);
+        }
+
+        .overview-card.highlighted {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(99, 102, 241, 0.02) 100%);
+            border-color: rgba(99, 102, 241, 0.4);
+        }
+
+        .overview-card.grade-highlight {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(245, 158, 11, 0.02) 100%);
+            border-color: rgba(245, 158, 11, 0.4);
+        }
+
+        .card-num {
+            font-size: 28px;
+            font-weight: 800;
+            color: #fff;
+            margin-top: 5px;
+        }
+
+        .overview-card.grade-highlight .card-num {
+            color: var(--accent);
+            text-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
+        }
+
+        /* Module Table */
+        .module-table-container {
+            position: relative;
+            z-index: 1;
+            margin-bottom: 40px;
+        }
+
+        .module-table-title {
+            font-size: 15px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .module-table-title::after {
+            content: '';
+            flex-grow: 1;
+            height: 1px;
+            background: var(--border-color);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            padding: 12px 16px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        td {
+            padding: 16px;
+            font-size: 14px;
+            border-bottom: 1px solid var(--border-color);
+            color: #fff;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.01);
+        }
+
+        .module-name {
+            font-weight: 600;
+        }
+
+        .score-val {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .pct-badge {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 12px;
+            display: inline-block;
+        }
+
+        .pct-badge.warning {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .percentile-val {
+            font-weight: 600;
+            color: #818cf8;
+        }
+
+        /* Footer sections */
+        .footer {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            border-top: 1px solid var(--border-color);
+            padding-top: 30px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .cert-verify {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .hash-code {
+            font-family: monospace;
+            color: #6366f1;
+            font-size: 10px;
+        }
+
+        .signature-section {
+            text-align: center;
+        }
+
+        .signature-line {
+            width: 150px;
+            height: 1px;
+            background: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .sign-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+
+<div class="grade-card">
+    <!-- Header -->
+    <div class="header">
+        <div class="header-logo-section">
+            <div class="logo-placeholder">LI</div>
+            <div class="institute-details">
+                <h1>LLOYD INSTITUTE OF ENGINEERING & TECHNOLOGY</h1>
+                <p>Greater Noida, Uttar Pradesh &bull; Approved by AICTE, New Delhi</p>
+            </div>
+        </div>
+        <div class="badge-training">SUMMER TRAINING 2026</div>
+    </div>
+
+    <!-- Student Info -->
+    <div class="student-info">
+        <div class="student-details">
+            <h2>Aman Kumar</h2>
+            <p>amankumarbtech23-27@liet.in</p>
+            <span class="program-tag">Machine Learning & Agentic AI</span>
+        </div>
+        <div class="student-meta-right">
+            <div class="meta-item">
+                <div class="meta-label">Evaluation Date</div>
+                <div class="meta-val">June 27, 2026</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overview Statistics -->
+    <div class="overview-grid">
+        <div class="overview-card highlighted">
+            <div class="meta-label">Overall Score</div>
+            <div class="card-num">21.0/161.0</div>
+        </div>
+        <div class="overview-card">
+            <div class="meta-label">Percentage</div>
+            <div class="card-num">13.0%</div>
+        </div>
+        <div class="overview-card">
+            <div class="meta-label">Final Percentile</div>
+            <div class="card-num">13.1%</div>
+        </div>
+        <div class="overview-card grade-highlight">
+            <div class="meta-label">Rank / Grade</div>
+            <div class="card-num">#54 &bull; F</div>
+        </div>
+    </div>
+
+    <!-- Module breakdown -->
+    <div class="module-table-container">
+        <div class="module-table-title">Module Performance Details</div>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 45%;">Module</th>
+                    <th style="text-align: center;">Score</th>
+                    <th style="text-align: center;">Percentage</th>
+                    <th style="text-align: right;">Percentile</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="module-name">Module 1: Python and Math for ML</div>
+                    </td>
+                    <td style="text-align: center;" class="score-val">
+                        5.0 / 115.0
+                    </td>
+                    <td style="text-align: center;">
+                        <span class="pct-badge warning">
+                            4.3%
+                        </span>
+                    </td>
+                    <td style="text-align: right;" class="percentile-val">
+                        11.5%
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="module-name">Module 2: Classical Machine Learning</div>
+                    </td>
+                    <td style="text-align: center;" class="score-val">
+                        0.0 / 10.0
+                    </td>
+                    <td style="text-align: center;">
+                        <span class="pct-badge warning">
+                            0.0%
+                        </span>
+                    </td>
+                    <td style="text-align: right;" class="percentile-val">
+                        1.6%
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="module-name">Module 3: Unsupervised & Ensemble Learning</div>
+                    </td>
+                    <td style="text-align: center;" class="score-val">
+                        16.0 / 20.0
+                    </td>
+                    <td style="text-align: center;">
+                        <span class="pct-badge ">
+                            80.0%
+                        </span>
+                    </td>
+                    <td style="text-align: right;" class="percentile-val">
+                        75.4%
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="module-name">Module 4: Deep Learning & NLP</div>
+                    </td>
+                    <td style="text-align: center;" class="score-val">
+                        0.0 / 0.0
+                    </td>
+                    <td style="text-align: center;">
+                        <span class="pct-badge ">
+                            nan%
+                        </span>
+                    </td>
+                    <td style="text-align: right;" class="percentile-val">
+                        1.6%
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="module-name">Module 5: LLMs & Agentic AI</div>
+                    </td>
+                    <td style="text-align: center;" class="score-val">
+                        0.0 / 16.0
+                    </td>
+                    <td style="text-align: center;">
+                        <span class="pct-badge warning">
+                            0.0%
+                        </span>
+                    </td>
+                    <td style="text-align: right;" class="percentile-val">
+                        1.6%
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <div class="cert-verify">
+            <span>Automated Performance Report Card</span>
+            <span>Verify authenticity: <span class="hash-code">924B9EC5E1F7</span></span>
+        </div>
+        <div class="signature-section">
+            <div class="signature-line"></div>
+            <span class="sign-title">Program Coordinator</span>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

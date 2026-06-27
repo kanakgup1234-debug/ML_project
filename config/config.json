@@ -1,0 +1,51 @@
+{
+  "program_name": "Summer Training: ML and Agentic AI",
+  "total_days": 25,
+  "modules": [
+    {
+      "name": "Module 1: Python and Math for ML",
+      "quizzes": ["day1_module1_quiz1", "day2_module1_quiz2", "day3_module1_quiz3", "day4_module1_quiz4"]
+    },
+    {
+      "name": "Module 2: Classical Machine Learning",
+      "quizzes": ["day6_module2_quiz6"]
+    },
+    {
+      "name": "Module 3: Unsupervised & Ensemble Learning",
+      "quizzes": ["day7_module3_quiz7"]
+    },
+    {
+      "name": "Module 4: Deep Learning & NLP",
+      "quizzes": []
+    },
+    {
+      "name": "Module 5: LLMs & Agentic AI",
+      "quizzes": ["day5_module5_quiz5"]
+    }
+  ],
+  "quiz_max_marks": {
+    "day1_module1_quiz1": 15,
+    "day2_module1_quiz2": 15,
+    "day3_module1_quiz3": 25,
+    "day4_module1_quiz4": 60,
+    "day5_module5_quiz5": 16,
+    "day6_module2_quiz6": 10,
+    "day7_module3_quiz7": 20
+  },
+  "grading_scale": [
+    {"min_percentile": 90.0, "grade": "A+"},
+    {"min_percentile": 75.0, "grade": "A"},
+    {"min_percentile": 60.0, "grade": "B"},
+    {"min_percentile": 45.0, "grade": "C"},
+    {"min_percentile": 30.0, "grade": "D"},
+    {"min_percentile": 0.0, "grade": "F"}
+  ],
+  "email_settings": {
+    "smtp_server": "smtp.gmail.com",
+    "smtp_port": 587,
+    "sender_email": "sender@gmail.com",
+    "sender_password": "YOUR_APP_PASSWORD_HERE",
+    "use_tls": true,
+    "mock_mode": true
+  }
+}

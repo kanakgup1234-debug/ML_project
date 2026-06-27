@@ -1,0 +1,9 @@
+pandas
+watchdog
+jinja2
+streamlit
+matplotlib
+seaborn
+plotly
+fpdf2
+scikit-learn

@@ -1,0 +1,44 @@
+Prompt 1:
+this is a problem statement and i want to build a project. And further i will provide you the details in which the model will be trained. make a file a named as prompt and store all the prompts whichever i give you
+
+Problem Statement Details:
+Project #1 Grade system workflow using Agentic AI
+Problem Statement:
+During the 25-day Machine Learning and Agentic AI Training Program, students participate in a daily MCQ quiz conducted through Google Forms. After each quiz, the marks of all students are downloaded and stored as separate files. As the number of quizzes increases, manually combining marks, calculating cumulative scores, computing module-wise and overall percentiles, assigning grades, generating grade cards, and sending performance reports to students becomes a time-consuming and error-prone process.
+Therefore, there is a need to develop an Automated Training Performance Management System that can automatically detect newly added quiz files, combine student scores using their email IDs, calculate daily, module-wise, and overall performance, determine percentiles and grades, generate personalized grade cards, and email them to students without manual intervention.
+The system should be simple, reliable, scalable, and completely based on free and open-source technologies so that it can be used efficiently for training programs involving a large number of participants.
+
+Working of the System:
+1: Conduct Daily Quiz
+2: Store Quiz File
+3: Automatic File Detection
+4: Merge Student Records
+5: Calculate Performance
+The system automatically calculates:
+- Daily Performance: Percentage score for each quiz.
+- Module-wise Performance: Marks and percentage for each module.
+- Cumulative Performance: Performance considering all quizzes conducted so far.
+- Module-wise Percentile: Relative standing among all students.
+- Final Percentile: Overall percentile considering all modules.
+- Rank: Overall rank of each student.
+- Grade.
+6: Generate Grade Card.
+7: Email Grade Card.
+
+Outputs Produced by the System:
+1. Master Performance File
+2. Module Summary File
+3. Final Rankings File
+4. Individual Grade Cards
+5. Email Reports
+6. Dashboard (Optional)
+   - Top Performers
+   - Module-wise Performance
+   - Grade Distribution
+   - Weak Students
+   - Average Marks
+   - Overall Statistics
+
+Prompt 2:
+train the model on this dataset
+
