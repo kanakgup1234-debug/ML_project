@@ -112,6 +112,23 @@ def train_models():
     joblib.dump(clf_model_data, MODEL_PATH_CLF)
     print(f"Saved classification model to: {MODEL_PATH_CLF}")
     
+    # Generate predictions JSON for all students (MERN stack backend bridge)
+    predictions_dict = {}
+    import json
+    for _, row in df.iterrows():
+        email = str(row["Email"]).strip().lower()
+        student_features = [row[f] for f in features_present]
+        pred_score_val = reg_model.predict([student_features])[0]
+        pred_grade_val = clf_model.predict([student_features])[0]
+        predictions_dict[email] = {
+            "predictedScore": float(pred_score_val),
+            "predictedGrade": str(pred_grade_val)
+        }
+    predictions_json_path = os.path.join(OUTPUT_DIR, "predictions.json")
+    with open(predictions_json_path, "w") as f:
+        json.dump(predictions_dict, f, indent=2)
+    print(f"Saved predictions JSON to: {predictions_json_path}")
+    
     print("\n" + "="*60)
     print("Model Training Successfully Completed!")
     print("="*60)

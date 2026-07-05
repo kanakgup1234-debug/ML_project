@@ -4,16 +4,40 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
+from dotenv import load_dotenv
 import config_loader
 
+# Load .env from project root
+load_dotenv(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.env')))
+
 OUTPUT_EMAILS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'output', 'emails_sent'))
+
+def _get_email_settings():
+    """Get email settings with .env overriding config.json values."""
+    config = config_loader.load_config()
+    settings = config_loader.get_email_settings(config)
+    
+    # .env variables take priority over config.json
+    if os.getenv('SMTP_SERVER'):
+        settings['smtp_server'] = os.getenv('SMTP_SERVER')
+    if os.getenv('SMTP_PORT'):
+        settings['smtp_port'] = int(os.getenv('SMTP_PORT'))
+    if os.getenv('SENDER_EMAIL'):
+        settings['sender_email'] = os.getenv('SENDER_EMAIL')
+    if os.getenv('SENDER_PASSWORD'):
+        settings['sender_password'] = os.getenv('SENDER_PASSWORD')
+    if os.getenv('USE_TLS'):
+        settings['use_tls'] = os.getenv('USE_TLS', 'true').lower() == 'true'
+    if os.getenv('MOCK_MODE'):
+        settings['mock_mode'] = os.getenv('MOCK_MODE', 'false').lower() == 'true'
+    
+    return settings
 
 def send_performance_email(student_name, student_email, grade_card_path, overall_pct, grade, rank):
     """Sends the performance report card to a student.
     Uses mock mode or real SMTP based on configuration.
     """
-    config = config_loader.load_config()
-    email_settings = config_loader.get_email_settings(config)
+    email_settings = _get_email_settings()
     mock_mode = email_settings.get("mock_mode", True)
     
     subject = f"Your Performance Report Card - Summer Training 2026 (Rank #{rank})"

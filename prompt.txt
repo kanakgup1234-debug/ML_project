@@ -42,3 +42,7 @@ Outputs Produced by the System:
 Prompt 2:
 train the model on this dataset
 
+Prompt 3:
+i want to display this into a dashboard so create a dashboard using mern stack
+
+
