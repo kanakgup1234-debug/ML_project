@@ -21,11 +21,11 @@ def run_pipeline():
         print("Pipeline aborted: No data processed.")
         return
         
-    # 2. Generate grade cards
-    cards_dir = card_generator.generate_all_cards(df_students)
+    # 2. Generate grade cards (Generated on demand during emailing phase)
+    # cards_dir = card_generator.generate_all_cards(df_students)
     
-    # 3. Send performance report emails
-    emailer.email_all_reports(df_students, cards_dir)
+    # 3. Send performance report emails (Only sent via manual dispatch from UI/CLI)
+    # emailer.email_all_reports(df_students, cards_dir)
     
     print("="*60)
     print("Pipeline Execution Completed Successfully.")

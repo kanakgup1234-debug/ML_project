@@ -115,14 +115,14 @@ def train_models():
     # Generate predictions JSON for all students (MERN stack backend bridge)
     predictions_dict = {}
     import json
-    for _, row in df.iterrows():
+    # Use batch prediction to avoid warnings and optimize performance
+    pred_scores = reg_model.predict(X)
+    pred_grades = clf_model.predict(X)
+    for idx, row in df.iterrows():
         email = str(row["Email"]).strip().lower()
-        student_features = [row[f] for f in features_present]
-        pred_score_val = reg_model.predict([student_features])[0]
-        pred_grade_val = clf_model.predict([student_features])[0]
         predictions_dict[email] = {
-            "predictedScore": float(pred_score_val),
-            "predictedGrade": str(pred_grade_val)
+            "predictedScore": float(pred_scores[idx]),
+            "predictedGrade": str(pred_grades[idx])
         }
     predictions_json_path = os.path.join(OUTPUT_DIR, "predictions.json")
     with open(predictions_json_path, "w") as f:

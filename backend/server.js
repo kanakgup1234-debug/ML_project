@@ -74,7 +74,7 @@ const syncCSVToDB = async () => {
     const studentDocs = [];
 
     masterData.forEach((row) => {
-      const email = String(row.Email).trim().lower();
+      const email = String(row.Email).trim().toLowerCase();
       const quizScores = new Map();
       const quizPercentages = new Map();
       const moduleScores = new Map();
@@ -132,6 +132,70 @@ const syncCSVToDB = async () => {
   }
 };
 
+// Helpers for auto quiz registration
+const parseMaxMarksFromCSV = (buffer) => {
+  const content = buffer.toString('utf8');
+  const lines = content.split('\n');
+  if (lines.length < 2) return 10;
+  
+  const headers = lines[0].split(',');
+  let scoreColIdx = -1;
+  for (let i = 0; i < headers.length; i++) {
+    const colName = headers[i].trim().toLowerCase();
+    if (colName.includes('score') || colName.includes('mark')) {
+      scoreColIdx = i;
+      break;
+    }
+  }
+  
+  if (scoreColIdx === -1) return 10;
+  
+  for (let j = 1; j < lines.length; j++) {
+    const row = lines[j].split(',');
+    if (row.length > scoreColIdx) {
+      const cellVal = row[scoreColIdx].trim();
+      const match = cellVal.match(/([\d\.]+)\s*\/\s*([\d\.]+)/);
+      if (match) {
+        const parsed = parseInt(match[2], 10);
+        if (!isNaN(parsed)) return parsed;
+      }
+    }
+  }
+  return 10;
+};
+
+const inferModuleFromQuizId = (quizId, config) => {
+  const lowerQuizId = quizId.toLowerCase();
+  let moduleKeyword = '';
+  
+  if (lowerQuizId.includes('module1') || lowerQuizId.includes('m1') || lowerQuizId.includes('mod1')) {
+    moduleKeyword = 'Module 1';
+  } else if (lowerQuizId.includes('module2') || lowerQuizId.includes('m2') || lowerQuizId.includes('mod2')) {
+    moduleKeyword = 'Module 2';
+  } else if (lowerQuizId.includes('module3') || lowerQuizId.includes('m3') || lowerQuizId.includes('mod3')) {
+    moduleKeyword = 'Module 3';
+  } else if (lowerQuizId.includes('module4') || lowerQuizId.includes('m4') || lowerQuizId.includes('mod4')) {
+    moduleKeyword = 'Module 4';
+  } else if (lowerQuizId.includes('module5') || lowerQuizId.includes('m5') || lowerQuizId.includes('mod5')) {
+    moduleKeyword = 'Module 5';
+  } else {
+    const dayMatch = lowerQuizId.match(/day\s*(\d+)/);
+    if (dayMatch) {
+      const dayNum = parseInt(dayMatch[1], 10);
+      if (dayNum <= 5) moduleKeyword = 'Module 1';
+      else if (dayNum <= 10) moduleKeyword = 'Module 2';
+      else if (dayNum <= 15) moduleKeyword = 'Module 3';
+      else if (dayNum <= 20) moduleKeyword = 'Module 4';
+      else moduleKeyword = 'Module 5';
+    } else {
+      moduleKeyword = 'Module 1';
+    }
+  }
+  
+  const targetModule = config.modules.find(m => m.name.toLowerCase().includes(moduleKeyword.toLowerCase()));
+  return targetModule ? targetModule.name : config.modules[0].name;
+};
+
 // Main Server Startup Function
 const startServer = async () => {
   // Connect to DB
@@ -146,12 +210,13 @@ const startServer = async () => {
   // Setup Routes
   app.post('/api/students/upload-quiz', upload.single('quizFile'), async (req, res) => {
     try {
-      const { quizId, isNewQuiz, moduleId, maxMarks } = req.body;
       if (!req.file) {
         return res.status(400).json({ error: 'No file uploaded' });
       }
+      let quizId = req.body.quizId;
       if (!quizId) {
-        return res.status(400).json({ error: 'quizId is required' });
+        const nameWithoutExt = path.basename(req.file.originalname, path.extname(req.file.originalname));
+        quizId = nameWithoutExt.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '_');
       }
 
       const quizzesDir = path.join(__dirname, '..', 'quizzes');
@@ -167,42 +232,41 @@ const startServer = async () => {
       let logs = [];
       logs.push(`Successfully saved uploaded file to quizzes/${quizId}.csv`);
 
-      // If it's a new quiz, update config.json
-      if (isNewQuiz === 'true' && moduleId) {
-        const configPath = path.join(__dirname, '..', 'config', 'config.json');
-        if (fs.existsSync(configPath)) {
-          try {
-            const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-            
-            // 1. Add to module quizzes list
-            const targetModule = config.modules.find(m => m.name === moduleId || m.name.startsWith(moduleId));
-            if (targetModule) {
-              if (!targetModule.quizzes.includes(quizId)) {
-                targetModule.quizzes.push(quizId);
-                console.log(`[Upload] Added ${quizId} to module ${targetModule.name}`);
-                logs.push(`Added ${quizId} to config module: ${targetModule.name}`);
-              }
-            } else {
-              console.warn(`[Upload] Module "${moduleId}" not found in config`);
-              logs.push(`Warning: Module "${moduleId}" not found in config. Added quiz file only.`);
+      // Update config.json automatically
+      const configPath = path.join(__dirname, '..', 'config', 'config.json');
+      if (fs.existsSync(configPath)) {
+        try {
+          const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+          
+          // 1. Infer module
+          const moduleId = inferModuleFromQuizId(quizId, config);
+          const targetModule = config.modules.find(m => m.name === moduleId);
+          
+          if (targetModule) {
+            if (!targetModule.quizzes.includes(quizId)) {
+              targetModule.quizzes.push(quizId);
+              console.log(`[Upload] Added ${quizId} to module ${targetModule.name}`);
+              logs.push(`Added ${quizId} to config module: ${targetModule.name}`);
             }
-
-            // 2. Set max marks
-            const parsedMaxMarks = parseInt(maxMarks, 10) || 10;
-            config.quiz_max_marks = config.quiz_max_marks || {};
-            config.quiz_max_marks[quizId] = parsedMaxMarks;
-            console.log(`[Upload] Set max marks for ${quizId} to ${parsedMaxMarks}`);
-            logs.push(`Set quiz max marks to ${parsedMaxMarks}`);
-
-            // Save updated config.json
-            fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
-          } catch (configErr) {
-            console.error('[Upload] Error updating config.json:', configErr);
-            logs.push(`Error updating config.json: ${configErr.message}`);
+          } else {
+            logs.push(`Warning: Module "${moduleId}" not found in config`);
           }
-        } else {
-          logs.push(`Warning: config.json not found. Added quiz file only.`);
+
+          // 2. Parse max marks from the uploaded CSV buffer
+          const parsedMaxMarks = parseMaxMarksFromCSV(req.file.buffer);
+          config.quiz_max_marks = config.quiz_max_marks || {};
+          config.quiz_max_marks[quizId] = parsedMaxMarks;
+          console.log(`[Upload] Set max marks for ${quizId} to ${parsedMaxMarks}`);
+          logs.push(`Set quiz max marks to ${parsedMaxMarks}`);
+
+          // Save updated config.json
+          fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
+        } catch (configErr) {
+          console.error('[Upload] Error updating config.json:', configErr);
+          logs.push(`Error updating config.json: ${configErr.message}`);
         }
+      } else {
+        logs.push(`Warning: config.json not found. Added quiz file only.`);
       }
 
       // Run Python execution: main.py --run
@@ -270,12 +334,13 @@ const startServer = async () => {
 
   app.post('/api/students/import-csv-text', async (req, res) => {
     try {
-      const { csvText, quizId, isNewQuiz, moduleId, maxMarks } = req.body;
+      const { csvText } = req.body;
       if (!csvText) {
         return res.status(400).json({ error: 'csvText is required' });
       }
+      let quizId = req.body.quizId;
       if (!quizId) {
-        return res.status(400).json({ error: 'quizId is required' });
+        quizId = `pasted_quiz_${Date.now()}`;
       }
 
       const quizzesDir = path.join(__dirname, '..', 'quizzes');
@@ -291,34 +356,32 @@ const startServer = async () => {
       let logs = [];
       logs.push(`Successfully saved pasted text to quizzes/${quizId}.csv`);
 
-      // If it's a new quiz, update config.json
-      if ((isNewQuiz === true || isNewQuiz === 'true') && moduleId) {
-        const configPath = path.join(__dirname, '..', 'config', 'config.json');
-        if (fs.existsSync(configPath)) {
-          try {
-            const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-            
-            // 1. Add to module quizzes list
-            const targetModule = config.modules.find(m => m.name === moduleId || m.name.startsWith(moduleId));
-            if (targetModule) {
-              if (!targetModule.quizzes.includes(quizId)) {
-                targetModule.quizzes.push(quizId);
-                logs.push(`Added ${quizId} to config module: ${targetModule.name}`);
-              }
-            } else {
-              logs.push(`Warning: Module "${moduleId}" not found in config. Added quiz file only.`);
+      // Update config.json automatically
+      const configPath = path.join(__dirname, '..', 'config', 'config.json');
+      if (fs.existsSync(configPath)) {
+        try {
+          const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+          
+          // 1. Infer module
+          const moduleId = inferModuleFromQuizId(quizId, config);
+          const targetModule = config.modules.find(m => m.name === moduleId);
+          
+          if (targetModule) {
+            if (!targetModule.quizzes.includes(quizId)) {
+              targetModule.quizzes.push(quizId);
+              logs.push(`Added ${quizId} to config module: ${targetModule.name}`);
             }
-
-            // 2. Set max marks
-            const parsedMaxMarks = parseInt(maxMarks, 10) || 10;
-            config.quiz_max_marks = config.quiz_max_marks || {};
-            config.quiz_max_marks[quizId] = parsedMaxMarks;
-            logs.push(`Set quiz max marks to ${parsedMaxMarks}`);
-
-            fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
-          } catch (configErr) {
-            logs.push(`Error updating config.json: ${configErr.message}`);
           }
+
+          // 2. Parse max marks from text
+          const parsedMaxMarks = parseMaxMarksFromCSV(Buffer.from(csvText, 'utf8'));
+          config.quiz_max_marks = config.quiz_max_marks || {};
+          config.quiz_max_marks[quizId] = parsedMaxMarks;
+          logs.push(`Set quiz max marks to ${parsedMaxMarks}`);
+
+          fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
+        } catch (configErr) {
+          logs.push(`Error updating config.json: ${configErr.message}`);
         }
       }
 

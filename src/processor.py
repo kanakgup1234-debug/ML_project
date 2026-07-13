@@ -23,6 +23,27 @@ def parse_score(score_val, max_score=10):
     except ValueError:
         return 0.0
 
+def clean_email(email_val):
+    if pd.isna(email_val):
+        return None
+    email = str(email_val).strip().lower()
+    if not email or email == 'nan':
+        return None
+    # Fix common domain typos (e.g. "akyadav5769@gmail" -> "akyadav5769@gmail.com")
+    if '@' in email:
+        parts = email.split('@')
+        local = parts[0].strip()
+        domain = parts[1].strip()
+        if '.' not in domain:
+            if domain == 'gmail':
+                domain = 'gmail.com'
+            elif domain == 'liet':
+                domain = 'liet.in'
+            else:
+                domain = domain + '.com'
+        email = f"{local}@{domain}"
+    return email
+
 def calculate_percentile(series):
     """Calculates percentile for a series of scores.
     Percentile = (number of scores <= current score) / total_scores * 100
@@ -98,8 +119,8 @@ def process_results():
             continue
             
         for _, row in df.iterrows():
-            email = str(row[email_col]).strip().lower()
-            if not email or email == 'nan':
+            email = clean_email(row[email_col])
+            if not email:
                 continue
                 
             name = str(row[name_col]).strip() if name_col and not pd.isna(row[name_col]) else "Unknown Student"
@@ -127,7 +148,7 @@ def process_results():
         try:
             roster_df = pd.read_csv(master_roster_path)
             for _, row in roster_df.iterrows():
-                email = str(row.get("Email Address", row.get("Email", ""))).strip().lower()
+                email = clean_email(row.get("Email Address", row.get("Email", "")))
                 name = str(row.get("Name", "Unknown Student")).strip()
                 if email and email not in student_records:
                     student_records[email] = {
@@ -172,7 +193,10 @@ def process_results():
         # Calculate marks obtained for this module
         df_students[f"{mod_name}_score"] = df_students[mod_quizzes].sum(axis=1) if mod_quizzes else 0.0
         df_students[f"{mod_name}_max"] = mod_max_marks
-        df_students[f"{mod_name}_pct"] = (df_students[f"{mod_name}_score"] / mod_max_marks) * 100
+        if mod_max_marks > 0:
+            df_students[f"{mod_name}_pct"] = (df_students[f"{mod_name}_score"] / mod_max_marks) * 100
+        else:
+            df_students[f"{mod_name}_pct"] = 0.0
         
         # Percentile within this module
         df_students[f"{mod_name}_percentile"] = calculate_percentile(df_students[f"{mod_name}_score"])
@@ -182,7 +206,10 @@ def process_results():
     total_max_marks = sum(quiz_max_marks.get(q, 10) for q in quizzes)
     df_students["Cumulative_Score"] = df_students[quizzes].sum(axis=1)
     df_students["Cumulative_Max"] = total_max_marks
-    df_students["Cumulative_Pct"] = (df_students["Cumulative_Score"] / total_max_marks) * 100
+    if total_max_marks > 0:
+        df_students["Cumulative_Pct"] = (df_students["Cumulative_Score"] / total_max_marks) * 100
+    else:
+        df_students["Cumulative_Pct"] = 0.0
     
     # Calculate overall Final Percentile
     df_students["Final_Percentile"] = calculate_percentile(df_students["Cumulative_Score"])
